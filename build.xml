@@ -1,0 +1,102 @@
+<project name="Demo_Spring_Ant_Project" default="build" basedir=".">
+
+    <!-- Define project properties -->
+    <property name="src.dir" value="src/main/java" />
+    <property name="resource.dir" value="src/main/resources" />
+    <property name="test.dir" value="src/test/java" />
+    <property name="test.resource.dir" value="src/test/resources" />
+    <property name="build.dir" value="out/classes" />
+    <property name="dist.dir" value="dist" />
+    <property name="lib.dir" value="lib" />
+    <property name="base.dir" value="out" />
+
+
+    <property name="cobertura.dir" value="C:/DevTools/UnitTest/cobertura-2.1.1" />
+    <property name="cobertura.report.format" value="html" />
+    <property name="cobertura.report.dir" value="cobertura-report" />
+    <property name="cobertura.report.file" value="${cobertura.report.dir}/coverage.xml" />
+
+
+    <!-- Set up classpaths -->
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <!-- JUnit 5 -->
+        <pathelement location="${lib.dir}/junit-jupiter-api-5.8.2.jar" />
+        <pathelement location="${lib.dir}/junit-jupiter-engine-5.8.2.jar" />
+        <pathelement location="${lib.dir}/junit-jupiter-params-5.8.2.jar" />
+        <!-- Mockito -->
+        <pathelement location="${lib.dir}/mockito-core-4.1.0.jar" />
+        <!-- DBUnit -->
+        <!-- <pathelement location="${lib.dir}/dbunit.jar" /> -->
+
+    </path>
+
+    <!-- Define targets -->
+    <target name="clean">
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
+        <delete dir="${report.dir}" />
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${build.dir}" />
+        <javac srcdir="${src.dir}" destdir="${build.dir}">
+            <classpath refid="classpath" />
+        </javac>
+        <copy todir="${build.dir}">
+            <fileset dir="${resource.dir}" />
+        </copy>
+    </target>
+
+    <target name="test" depends="compile">
+        <mkdir dir="${build.dir}" />
+        <javac srcdir="${test.dir}" destdir="${build.dir}">
+            <classpath refid="classpath" />
+        </javac>
+        <copy todir="${build.dir}">
+            <fileset dir="${test.resource.dir}" />
+        </copy>
+        <junit>
+            <classpath>
+                <path refid="classpath" />
+                <pathelement location="${build.dir}" />
+            </classpath>
+            <batchtest todir="${build.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <path id="cobertura.classpath">
+        <fileset dir="${cobertura.dir}">
+            <include name="lib/**/*.jar" />
+        </fileset>
+    </path>
+
+    <taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+    <taskdef name="cobertura-instrument" classname="net.sourceforge.cobertura.ant.InstrumentTask" classpathref="cobertura.classpath" />
+    <taskdef name="cobertura-report" classname="net.sourceforge.cobertura.ant.ReportTask" classpathref="cobertura.classpath" />
+
+
+    <cobertura-instrument datafile="${cobertura.report.file}">
+        <fileset dir="${build.dir}" includes="**/*.class" />
+    </cobertura-instrument>
+
+    <junit>
+        <!-- Your existing JUnit configuration -->
+    </junit>
+
+    <cobertura-report format="${cobertura.report.format}" destdir="${cobertura.report.dir}">
+        <fileset dir="${src.dir}" includes="**/*.java" />
+        <fileset dir="${test.dir}" includes="**/*.java" />
+        <fileset dir="${build.dir}" includes="**/*.class" />
+    </cobertura-report>
+
+
+
+
+</project>

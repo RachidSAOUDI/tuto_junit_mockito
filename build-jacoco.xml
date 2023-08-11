@@ -1,0 +1,96 @@
+<project name="Demo_Spring_Ant_Project" default="build" basedir=".">
+
+    <!-- Define project properties -->
+    <property name="src.dir" value="src/main/java" />
+    <property name="resource.dir" value="src/main/resources" />
+    <property name="test.dir" value="src/test/java" />
+    <property name="test.resource.dir" value="src/test/resources" />
+    <property name="build.dir" value="out/classes" />
+    <property name="dist.dir" value="dist" />
+    <property name="lib.dir" value="lib" />
+    <property name="report.dir" value="out/jacoco-report" />
+
+    <!-- Set up classpaths -->
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <!-- JUnit 5 -->
+        <pathelement location="${lib.dir}/junit-jupiter-api-5.8.2.jar" />
+        <pathelement location="${lib.dir}/junit-jupiter-engine-5.8.2.jar" />
+        <pathelement location="${lib.dir}/junit-jupiter-params-5.8.2.jar" />
+        <!-- Mockito -->
+        <pathelement location="${lib.dir}/mockito-core-4.1.0.jar" />
+        <!-- DBUnit -->
+        <!-- <pathelement location="${lib.dir}/dbunit.jar" /> -->
+
+        <!-- JaCoCo -->
+        <pathelement location="${lib.dir}/org.jacoco.agent-0.8.10.jar" />
+        <pathelement location="${lib.dir}/org.jacoco.core-0.8.10.jar" />
+        <pathelement location="${lib.dir}/org.jacoco.report-0.8.10.jar" />
+    </path>
+
+    <target name="generate-jacoco-exec">
+        <java classname="org.jacoco.cli.internal.Main" fork="true" failonerror="true">
+            <arg value="dump" />
+            <arg line="--address localhost --port 6300 --destfile ${build.dir}/jacoco.exec" />
+            <classpath>
+                <pathelement location="lib/org.jacoco.cli-0.8.10-nodeps.jar" />
+            </classpath>
+        </java>
+    </target>
+    <!-- Define targets -->
+    <target name="clean">
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
+        <delete dir="${report.dir}" />
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${build.dir}" />
+        <javac srcdir="${src.dir}" destdir="${build.dir}">
+            <classpath refid="classpath" />
+        </javac>
+        <copy todir="${build.dir}">
+            <fileset dir="${resource.dir}" />
+        </copy>
+    </target>
+
+    <target name="test" depends="compile">
+        <mkdir dir="${build.dir}" />
+        <javac srcdir="${test.dir}" destdir="${build.dir}">
+            <classpath refid="classpath" />
+        </javac>
+        <copy todir="${build.dir}">
+            <fileset dir="${test.resource.dir}" />
+        </copy>
+        <junit>
+            <classpath>
+                <path refid="classpath" />
+                <pathelement location="${build.dir}" />
+            </classpath>
+            <batchtest todir="${build.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="generate-report" depends="test">
+        <!-- Execute JaCoCo CLI command to generate report -->
+        <exec executable="java">
+            <arg line="-jar ${lib.dir}/org.jacoco.cli-0.8.10-nodeps.jar report ${build.dir}/jacoco.exec --classfiles ${build.dir} --sourcefiles ${src.dir} --html ${report.dir}" />
+        </exec>
+    </target>
+
+    <target name="package" depends="test">
+        <jar destfile="${dist.dir}/Demo_Spring_Ant_Project.jar" basedir="${build.dir}" />
+    </target>
+
+    <target name="build" depends="package">
+        <echo message="Build completed." />
+    </target>
+
+
+</project>
